@@ -74,6 +74,7 @@ export function mergeDocs(L, Rraw) {
 
 function authMessage(e) {
   const m = (e && e.message) || '';
+  if (/Invalid path|Not Found|404|Invalid API key|Invalid URL/i.test(m)) return 'Приложение не может связаться с Supabase. Проверьте в Vercel переменную VITE_SUPABASE_URL: адрес должен выглядеть как https://xxxx.supabase.co, без пробелов, кавычек и лишних частей, а ключ VITE_SUPABASE_ANON_KEY должен быть публичным (sb_publishable_...). После исправления сделайте Redeploy.';
   if (/Invalid login credentials/i.test(m)) return 'Неверная почта или пароль.';
   if (/already registered/i.test(m)) return 'Такой аккаунт уже есть. Нажмите «Войти».';
   if (/at least 6/i.test(m)) return 'Пароль должен быть не короче 6 символов.';
@@ -283,6 +284,14 @@ export function SyncProvider({ children }) {
   }, [conflict, sheet]);
 
   async function auth(email, password, create) {
+    try {
+      return await authInner(email, password, create);
+    } catch (err) {
+      return { ok: false, msg: authMessage(err) };
+    }
+  }
+
+  async function authInner(email, password, create) {
     if (!sb) return { ok: false, msg: 'Синхронизация не настроена.' };
     const fn = create ? sb.auth.signUp({ email, password }) : sb.auth.signInWithPassword({ email, password });
     const { data, error: e } = await fn;

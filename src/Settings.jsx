@@ -147,13 +147,18 @@ export function SyncBlock({ onDone }) {
     }
     setBusy(true);
     setMsg('');
-    const r = await sy.auth(email.trim(), pw, create);
-    setBusy(false);
-    if (!r.ok) setMsg(r.msg);
-    else {
-      setPw('');
-      toast('Синхронизация включена');
-      if (onDone) onDone();
+    try {
+      const r = await sy.auth(email.trim(), pw, create);
+      if (!r.ok) setMsg(r.msg);
+      else {
+        setPw('');
+        toast('Синхронизация включена');
+        if (onDone) onDone();
+      }
+    } catch (e) {
+      setMsg('Не получилось связаться с сервером. Проверьте интернет и настройки подключения.');
+    } finally {
+      setBusy(false);
     }
   }
 
