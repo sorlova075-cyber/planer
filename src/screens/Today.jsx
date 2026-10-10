@@ -46,6 +46,7 @@ export default function Today() {
   if (M.cycle) {
     lines.push(ph ? PHASE[ph].name + ': ' + PHASE[ph].hint : 'Отметьте начало месячных в разделе «Здоровье», и появится прогноз.');
   }
+  if (M.meno && (S.meno.hot[t] || 0) > 0) lines.push('Приливов сегодня: ' + S.meno.hot[t] + '.');
   if (M.habits && S.habits.length) lines.push(left ? `Осталось дел: ${left} из ${S.habits.length}.` : 'Все дела на сегодня сделаны.');
   if (M.beauty) {
     const due = S.care.filter((c) => c.last && diffDays(c.last, t) >= c.every).map((c) => c.t);
@@ -72,6 +73,11 @@ export default function Today() {
   }
   function removeHabit(id) {
     up((d) => void (d.habits = d.habits.filter((h) => h.id !== id)));
+  }
+  function addFlash() {
+    const n = (S.meno.hot[t] || 0) + 1;
+    up((d) => void (d.meno.hot[t] = n));
+    toast('Приливов сегодня: ' + n);
   }
   function addWater() {
     const n = Math.min(8, (S.water[t] || 0) + 1);
@@ -138,7 +144,15 @@ export default function Today() {
             Трата
           </button>
         )}
-        {(M.cycle || M.health) && (
+        {M.meno && (
+          <button onClick={addFlash}>
+            <span className="qi">
+              <Icon n="meno" size={22} />
+            </span>
+            Прилив
+          </button>
+        )}
+        {(M.cycle || M.health || M.meno) && (
           <button onClick={() => setMoodOpen(!moodOpen)}>
             <span className="qi">
               <Icon n="smile" size={22} />
@@ -156,7 +170,7 @@ export default function Today() {
         )}
       </div>
 
-      {moodOpen && (M.cycle || M.health) && (
+      {moodOpen && (M.cycle || M.health || M.meno) && (
         <section className="card">
           <h2>Как вы себя чувствуете?</h2>
           <div className="chips">

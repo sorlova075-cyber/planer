@@ -12,7 +12,7 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const o = JSON.parse(raw);
-      return { ...base, ...o, mods: { ...base.mods, ...(o.mods || {}) }, cycle: { ...base.cycle, ...(o.cycle || {}) } };
+      return { ...base, ...o, mods: { ...base.mods, ...(o.mods || {}) }, cycle: { ...base.cycle, ...(o.cycle || {}) }, meno: { ...base.meno, ...(o.meno || {}) } };
     }
   } catch (e) {
     /* если данные повреждены, начинаем с чистого листа */

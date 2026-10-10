@@ -8,15 +8,17 @@ import Health from './screens/Health.jsx';
 import Beauty from './screens/Beauty.jsx';
 import Money from './screens/Money.jsx';
 import Life from './screens/Life.jsx';
+import Menopause from './screens/Menopause.jsx';
 
 const TABS = [
   ['today', 'Сегодня', 'today'],
   ['health', 'Здоровье', 'health'],
   ['beauty', 'Красота', 'beauty'],
   ['money', 'Деньги', 'money'],
-  ['life', 'Жизнь', 'life']
+  ['life', 'Жизнь', 'life'],
+  ['meno', 'Менопауза', 'meno']
 ];
-const SCREENS = { today: Today, health: Health, beauty: Beauty, money: Money, life: Life };
+const SCREENS = { today: Today, health: Health, beauty: Beauty, money: Money, life: Life, meno: Menopause };
 
 function tabVisible(k, M) {
   if (k === 'today') return true;
@@ -24,6 +26,7 @@ function tabVisible(k, M) {
   if (k === 'beauty') return M.beauty;
   if (k === 'money') return M.money;
   if (k === 'life') return M.life;
+  if (k === 'meno') return M.meno;
   return true;
 }
 

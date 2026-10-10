@@ -249,3 +249,17 @@ button.cat.linkcard{border:0}
   .sheet{max-width:500px;border-radius:32px;max-height:88%;margin:0 16px}
   .toast{bottom:32px}
 }
+
+/* ---- менопауза и мелкие правки ---- */
+.counter{display:flex;align-items:center;justify-content:center;gap:22px;margin:12px 0 4px}
+.counter b{font-family:Lora,Georgia,serif;font-size:50px;min-width:72px;text-align:center;line-height:1}
+.counter .icon-btn{width:54px;height:54px;background:var(--soft);box-shadow:none}
+.bars{display:flex;align-items:flex-end;gap:4px;height:110px;margin-top:12px}
+.bars>div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.bars i{display:block;width:100%;border-radius:8px 8px 4px 4px;background:var(--rose)}
+.bars span{font-size:10px;color:var(--ink2)}
+pre.summary{white-space:pre-wrap;font:600 14.5px/1.5 Nunito,system-ui,sans-serif;background:var(--surface);border-radius:18px;padding:14px;margin:14px 0 0}
+.qa{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+.qa button{font-size:11.5px;padding:12px 2px}
+nav button{font-size:10.5px}
+@media (min-width:900px){.qa button{font-size:12.5px}nav button{font-size:15px}}

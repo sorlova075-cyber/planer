@@ -7,7 +7,8 @@ export const MODS = [
   ['beauty', 'Красота', 'Рутины ухода и расписание', 'beauty'],
   ['money', 'Деньги', 'Доходы, траты, копилки', 'money'],
   ['life', 'Подруги', 'Встречи, дни рождения, подарки', 'life'],
-  ['habits', 'Привычки', 'Дела дня без давления', 'habit']
+  ['habits', 'Привычки', 'Дела дня без давления', 'habit'],
+  ['meno', 'Менопауза', 'Приливы, сон, сводка для врача', 'meno']
 ];
 
 export const PALS = [
@@ -25,6 +26,12 @@ export const MOODS = {
   'Тревожно': 'Записали. Попробуйте три медленных вдоха и стакан воды.',
   'Грустно': 'Записали. Вы не обязаны справляться идеально.'
 };
+
+export const MENO_SYMPTOMS = [
+  'Ночная потливость', 'Плохой сон', 'Перепады настроения', 'Тревожность', 'Сердцебиение', 'Туман в голове',
+  'Боли в суставах', 'Сухость кожи', 'Сухость слизистых', 'Снижение либидо', 'Головная боль', 'Усталость'
+];
+export const SLEEP_LABELS = ['Плохо', 'Так себе', 'Нормально', 'Хорошо', 'Отлично'];
 
 export const SYMPTOMS = ['Хорошая энергия', 'Усталость', 'Головная боль', 'Вздутие', 'Отёки', 'Тяга к сладкому'];
 
@@ -48,7 +55,8 @@ export const defaults = () => ({
   name: '',
   pinHash: null,
   pinSalt: null,
-  mods: { cycle: true, health: true, beauty: true, money: true, life: true, habits: true },
+  mods: { cycle: true, health: true, beauty: true, money: true, life: true, habits: true, meno: false },
+  meno: { hot: {}, sleep: {}, sym: {} },
   palette: 'powder',
   mode: 'auto',
   cur: '₽',
