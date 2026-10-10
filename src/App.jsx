@@ -27,6 +27,19 @@ function tabVisible(k, M) {
   return true;
 }
 
+// Маленький цветок для боковой панели на компьютере
+function MiniPetals() {
+  return (
+    <svg viewBox="0 0 300 300" width="30" height="30">
+      {[0, 1, 2, 3, 4, 5].map((k) => (
+        <ellipse key={k} cx="150" cy="92" rx="40" ry="72" fill={k % 2 ? 'var(--lilac)' : 'var(--rose)'} opacity=".75" transform={`rotate(${k * 60} 150 150)`} />
+      ))}
+      <circle cx="150" cy="150" r="26" fill="var(--surface)" />
+      <circle cx="150" cy="150" r="9" fill="var(--plum)" />
+    </svg>
+  );
+}
+
 function Shell() {
   const { S } = useStore();
   const { tab, setTab, sheetNode, sheet, toastMsg } = useUi();
@@ -58,6 +71,10 @@ function Shell() {
 
       {!main && (
         <nav aria-label="Разделы">
+          <div className="brand" aria-hidden="true">
+            <MiniPetals />
+            Планер
+          </div>
           {TABS.filter((t) => tabVisible(t[0], S.mods)).map(([k, label, icon]) => (
             <button key={k} aria-current={tab === k ? 'page' : undefined} onClick={() => setTab(k)}>
               <Icon n={icon} size={24} />

@@ -227,3 +227,25 @@ button.cat.linkcard{border:0}
 .card-h .icon-btn{width:36px;height:36px}
 .row:disabled{cursor:default}
 .in[type="date"],.in[type="time"]{min-height:50px}
+
+/* ---- компьютер: боковое меню и широкая раскладка ---- */
+.brand{display:none}
+@media (min-width:900px){
+  html,body{background:var(--bg)}
+  #app{max-width:none;height:100%;margin:0;border-radius:0;box-shadow:none;flex-direction:row}
+  nav{order:-1;flex:none;width:250px;flex-direction:column;gap:6px;margin:0;padding:28px 16px;background:var(--surface);border-radius:0;box-shadow:none;border-right:1px solid var(--line);overflow-y:auto}
+  nav .brand{display:flex;align-items:center;gap:10px;padding:4px 12px 24px;font-family:Lora,Georgia,serif;font-weight:600;font-size:22px}
+  nav button{flex:none;flex-direction:row;justify-content:flex-start;gap:14px;padding:13px 16px;font-size:15px;border-radius:18px}
+  #main{flex:1;min-width:0;padding:0 max(32px,calc((100% - 1100px) / 2)) 48px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px;align-content:start;align-items:start}
+  #main>.top,#main>.lead,#main>.qa,#main>.week,#main>.sum,#main>.btn-row,#main>.seg,#main>.friends,#main>.card-h,#main>.onb{grid-column:1/-1}
+  #main>.seg{max-width:380px}
+  #main>.qa{max-width:600px}
+  #main>.btn-row{max-width:520px}
+  #main>.onb{max-width:520px;width:100%;margin:0 auto}
+  h1{font-size:36px}
+  .top{padding-top:32px}
+  .day{aspect-ratio:auto;height:46px}
+  .scrim{align-items:center;justify-content:center}
+  .sheet{max-width:500px;border-radius:32px;max-height:88%;margin:0 16px}
+  .toast{bottom:32px}
+}
