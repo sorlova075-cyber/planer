@@ -1,6 +1,7 @@
 // Настройки: имя, оформление, валюта, разделы, PIN, экспорт и удаление данных.
 import { useState } from 'react';
 import { useStore, hashPin, newSalt } from './store.jsx';
+import { useSync } from './sync.jsx';
 import { Icon, Sheet, Seg, Chip, useUi } from './ui.jsx';
 import { MODS, PALS, CURRENCIES } from './data.js';
 
@@ -108,7 +109,7 @@ function DataBlock({ onWipe }) {
       </div>
       {confirm && (
         <div className="result" style={{ marginTop: 12 }}>
-          Все данные на этом устройстве будут стёрты без возможности восстановления.
+          Все данные на этом устройстве будут стёрты без возможности восстановления. Если включена синхронизация, данные в облаке тоже удалятся.
           <div className="btn-row">
             <button className="btn ghost sm" onClick={() => setConfirm(false)}>
               Отмена
@@ -123,11 +124,119 @@ function DataBlock({ onWipe }) {
   );
 }
 
+export function SyncBlock({ onDone }) {
+  const sy = useSync();
+  const { toast } = useUi();
+  const [email, setEmail] = useState('');
+  const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  if (!sy.available) {
+    return (
+      <p className="sub" style={{ marginTop: 6 }}>
+        Синхронизация пока не подключена. Как её включить, написано в файле СИНХРОНИЗАЦИЯ.md.
+      </p>
+    );
+  }
+
+  async function go(create) {
+    if (!email.trim() || pw.length < 6) {
+      setMsg('Введите почту и пароль не короче 6 символов.');
+      return;
+    }
+    setBusy(true);
+    setMsg('');
+    const r = await sy.auth(email.trim(), pw, create);
+    setBusy(false);
+    if (!r.ok) setMsg(r.msg);
+    else {
+      setPw('');
+      toast('Синхронизация включена');
+      if (onDone) onDone();
+    }
+  }
+
+  if (sy.user) {
+    const time = sy.lastSync ? new Date(sy.lastSync).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : null;
+    const text =
+      sy.status === 'syncing'
+        ? 'Синхронизирую…'
+        : sy.status === 'offline'
+        ? 'Нет сети. Синхронизирую, как только появится.'
+        : sy.status === 'error'
+        ? sy.error || 'Не получилось синхронизировать.'
+        : sy.status === 'conflict'
+        ? 'Нужно выбрать, какие данные оставить.'
+        : time
+        ? 'Синхронизировано в ' + time + '.'
+        : 'Включена.';
+    return (
+      <>
+        <p className="sub" style={{ marginTop: 6 }}>
+          Вы вошли как {sy.user.email}. {text}
+        </p>
+        <p className="sub" style={{ marginTop: 6, fontSize: 13 }}>
+          Данные шифруются на устройстве вашим паролем. В облаке лежит только зашифрованный набор. Если забыть пароль, данные из облака не восстановить.
+        </p>
+        <div className="btn-row">
+          {sy.status === 'conflict' ? (
+            <button className="btn sm" onClick={sy.openConflict}>
+              Выбрать
+            </button>
+          ) : (
+            <button className="btn sm ghost" onClick={sy.syncNow}>
+              Синхронизировать сейчас
+            </button>
+          )}
+          <button className="btn sm ghost" onClick={sy.signOut}>
+            Выйти
+          </button>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <p className="sub" style={{ marginTop: 6 }}>
+        Войдите одним аккаунтом на телефоне и на ноутбуке, и записи будут одинаковыми везде.
+      </p>
+      <input className="in" type="email" autoComplete="email" placeholder="Почта" aria-label="Почта" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <input className="in" type="password" autoComplete="current-password" placeholder="Пароль (не короче 6 символов)" aria-label="Пароль" value={pw} onChange={(e) => setPw(e.target.value)} />
+      {msg && (
+        <p className="sub" style={{ marginTop: 8, color: 'var(--plum)', fontWeight: 700 }} role="alert">
+          {msg}
+        </p>
+      )}
+      <div className="btn-row">
+        <button className="btn sm" disabled={busy} onClick={() => go(false)}>
+          Войти
+        </button>
+        <button className="btn sm ghost" disabled={busy} onClick={() => go(true)}>
+          Создать аккаунт
+        </button>
+      </div>
+    </>
+  );
+}
+
+export function LoginSheet() {
+  const { sheet } = useUi();
+  return (
+    <Sheet title="Вход в аккаунт">
+      <SyncBlock onDone={sheet.close} />
+    </Sheet>
+  );
+}
+
 export function SettingsSheet() {
   const { S, up, reset } = useStore();
   const { sheet, setTab, toast } = useUi();
+  const sync = useSync();
 
-  function wipe() {
+  async function wipe() {
+    if (sync && sync.user) await sync.deleteCloud();
     reset();
     sheet.close();
     setTab('today');
@@ -191,6 +300,9 @@ export function SettingsSheet() {
           </Chip>
         ))}
       </div>
+
+      <span className="lab">Синхронизация</span>
+      <SyncBlock />
 
       <span className="lab">PIN-код</span>
       <PinBlock />

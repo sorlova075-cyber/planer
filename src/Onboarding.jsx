@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { useStore, hashPin, newSalt } from './store.jsx';
 import { Icon, Switch, useUi } from './ui.jsx';
+import { LoginSheet } from './Settings.jsx';
+import { useSync } from './sync.jsx';
 import { MODS } from './data.js';
 import { today } from './util.js';
 
@@ -96,7 +98,8 @@ export function Lock({ onUnlock }) {
 
 export function Onboarding() {
   const { S, up } = useStore();
-  const { setTab, toast } = useUi();
+  const { setTab, toast, sheet } = useUi();
+  const sync = useSync();
   const [step, setStep] = useState(0);
   const [name, setName] = useState(S.name);
   const [pinOn, setPinOn] = useState(false);
@@ -163,6 +166,11 @@ export function Onboarding() {
         <button className="btn full" onClick={next}>
           Начать
         </button>
+        {sync && sync.available && (
+          <button className="btn ghost full" onClick={() => sheet.open(<LoginSheet />)}>
+            У меня уже есть аккаунт
+          </button>
+        )}
       </div>
     );
   }

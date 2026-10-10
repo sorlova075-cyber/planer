@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { StoreProvider, useStore } from './store.jsx';
 import { UiProvider, useUi, Icon } from './ui.jsx';
+import { SyncProvider } from './sync.jsx';
 import { Lock, Onboarding } from './Onboarding.jsx';
 import Today from './screens/Today.jsx';
 import Health from './screens/Health.jsx';
@@ -87,7 +88,7 @@ function Shell() {
         </nav>
       )}
 
-      {sheetNode && !main && (
+      {sheetNode && !locked && (
         <div className="scrim" onClick={(e) => e.target === e.currentTarget && sheet.close()}>
           {sheetNode}
         </div>
@@ -105,7 +106,9 @@ export default function App() {
   return (
     <StoreProvider>
       <UiProvider>
-        <Shell />
+        <SyncProvider>
+          <Shell />
+        </SyncProvider>
       </UiProvider>
     </StoreProvider>
   );
