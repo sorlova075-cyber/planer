@@ -2,7 +2,9 @@
 import { useState } from 'react';
 import { useStore } from '../store.jsx';
 import { Header } from '../Settings.jsx';
-import { Sheet, Switch, DelBtn, EditToggle, Empty, Icon, useUi } from '../ui.jsx';
+import { Sheet, Switch, DelBtn, EditToggle, Empty, Icon, Chip, useUi } from '../ui.jsx';
+import { describe } from '../reminders.js';
+import { sendToCalendar } from '../ics.js';
 import { SYMPTOMS } from '../data.js';
 import { cycleDay, phaseOf, ovulationDay, PHASE, daysToNextPeriod } from '../cycle.js';
 import { today, ymd, parse, WD, MONTHS, cap, longDate, uid } from '../util.js';
@@ -55,28 +57,86 @@ export function CycleSheet() {
   );
 }
 
-function ReminderSheet() {
+const REPEATS = [['daily', 'Каждый день'], ['weekly', 'По дням недели'], ['monthly', 'Раз в месяц'], ['none', 'Один раз']];
+const ALARMS = [[0, 'В момент'], [10, 'За 10 минут'], [60, 'За час'], [1440, 'За день']];
+
+// Окно напоминания: что, когда, как часто, и добавление в календарь телефона
+export function ReminderSheet({ reminder }) {
   const { up } = useStore();
-  const { sheet } = useUi();
-  const [t, setT] = useState('');
-  const [s, setS] = useState('');
-  function save() {
-    if (!t.trim()) return;
-    up((d) => void d.reminders.push({ id: uid(), t: t.trim(), s: s.trim(), on: true }));
+  const { sheet, toast } = useUi();
+  const r0 = reminder || {};
+  const [t, setT] = useState(r0.t || '');
+  const [date, setDate] = useState(r0.date || today());
+  const [time, setTime] = useState(r0.time || '09:00');
+  const [repeat, setRepeat] = useState(r0.repeat || 'daily');
+  const [days, setDays] = useState(r0.days || []);
+  const [alarm, setAlarm] = useState(r0.alarm === undefined ? 0 : r0.alarm);
+
+  function save(toCalendar) {
+    if (!t.trim()) return toast('Напишите, что напомнить');
+    if (!time) return toast('Укажите время');
+    if (repeat === 'weekly' && !days.length) return toast('Выберите дни недели');
+    const r = { id: r0.id || uid(), t: t.trim(), time, date, repeat, days: repeat === 'weekly' ? days : [], alarm, on: r0.on === undefined ? true : r0.on };
+    r.s = describe(r);
+    up((d) => {
+      const i = d.reminders.findIndex((x) => x.id === r.id);
+      if (i > -1) d.reminders[i] = r;
+      else d.reminders.push(r);
+    });
     sheet.close();
+    if (toCalendar) sendToCalendar([r], toast);
   }
+
   return (
-    <Sheet title="Новое напоминание">
+    <Sheet title={reminder ? 'Напоминание' : 'Новое напоминание'}>
       <label className="lab" htmlFor="rm-t">
         Что напомнить
       </label>
-      <input className="in" id="rm-t" type="text" placeholder="Например, гинеколог" autoFocus value={t} onChange={(e) => setT(e.target.value)} />
-      <label className="lab" htmlFor="rm-s">
-        Когда
-      </label>
-      <input className="in" id="rm-s" type="text" placeholder="Например, 24 октября, 11:30" value={s} onChange={(e) => setS(e.target.value)} />
-      <button className="btn full" onClick={save}>
-        Добавить
+      <input className="in" id="rm-t" type="text" placeholder="Например, витамины" autoFocus={!reminder} value={t} onChange={(e) => setT(e.target.value)} />
+      <div className="split-grid">
+        <div>
+          <label className="lab" htmlFor="rm-d">
+            {repeat === 'none' ? 'Дата' : 'Начиная с'}
+          </label>
+          <input className="in" id="rm-d" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <div>
+          <label className="lab" htmlFor="rm-tm">
+            Время
+          </label>
+          <input className="in" id="rm-tm" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+        </div>
+      </div>
+      <span className="lab">Как часто</span>
+      <div className="chips" style={{ marginTop: 8 }}>
+        {REPEATS.map(([k, label]) => (
+          <Chip key={k} on={repeat === k} onClick={() => setRepeat(k)}>
+            {label}
+          </Chip>
+        ))}
+      </div>
+      {repeat === 'weekly' && (
+        <div className="chips" style={{ marginTop: 8 }}>
+          {WD.map((w, i) => (
+            <Chip key={w} on={days.includes(i)} onClick={() => setDays(days.includes(i) ? days.filter((x) => x !== i) : [...days, i])}>
+              {w}
+            </Chip>
+          ))}
+        </div>
+      )}
+      <span className="lab">Когда напомнить</span>
+      <div className="chips" style={{ marginTop: 8 }}>
+        {ALARMS.map(([k, label]) => (
+          <Chip key={k} on={alarm === k} onClick={() => setAlarm(k)}>
+            {label}
+          </Chip>
+        ))}
+      </div>
+      <button className="btn full" onClick={() => save(true)}>
+        Сохранить и добавить в календарь
+      </button>
+      <button className="btn full ghost" onClick={() => save(false)}>
+        Только сохранить
       </button>
     </Sheet>
   );
@@ -84,7 +144,7 @@ function ReminderSheet() {
 
 export default function Health() {
   const { S, up } = useStore();
-  const { sheet } = useUi();
+  const { sheet, toast } = useUi();
   const M = S.mods;
   const t = today();
   const now = new Date();
@@ -263,23 +323,30 @@ export default function Health() {
             <div className="list">
               {S.reminders.map((r) => (
                 <div className="static" key={r.id}>
-                  <div className="tx">
+                  <button className="tx-btn" onClick={() => sheet.open(<ReminderSheet reminder={r} />)} aria-label={'Изменить: ' + r.t}>
                     {r.t}
-                    {r.s ? <small>{r.s}</small> : null}
-                  </div>
+                    <small>{r.time ? r.s : r.s || 'Нажмите, чтобы задать время'}</small>
+                  </button>
                   {edit ? (
                     <DelBtn onClick={() => up((d) => void (d.reminders = d.reminders.filter((x) => x.id !== r.id)))} label={'Удалить: ' + r.t} />
                   ) : (
-                    <Switch
-                      on={r.on}
-                      label={r.t}
-                      onClick={() =>
-                        up((d) => {
-                          const x = d.reminders.find((q) => q.id === r.id);
-                          x.on = !x.on;
-                        })
-                      }
-                    />
+                    <>
+                      {r.time && (
+                        <button className="icon-btn del" aria-label={'В календарь: ' + r.t} onClick={() => sendToCalendar([r], toast)}>
+                          <Icon n="calendar" size={18} />
+                        </button>
+                      )}
+                      <Switch
+                        on={r.on}
+                        label={r.t}
+                        onClick={() =>
+                          up((d) => {
+                            const x = d.reminders.find((q) => q.id === r.id);
+                            x.on = !x.on;
+                          })
+                        }
+                      />
+                    </>
                   )}
                 </div>
               ))}
@@ -287,8 +354,13 @@ export default function Health() {
             <button className="btn full ghost" onClick={() => sheet.open(<ReminderSheet />)}>
               Добавить напоминание
             </button>
+            {S.reminders.some((r) => r.time && r.on) && (
+              <button className="btn full ghost" onClick={() => sendToCalendar(S.reminders.filter((r) => r.time && r.on), toast)}>
+                Все включённые в календарь ({S.reminders.filter((r) => r.time && r.on).length})
+              </button>
+            )}
             <p className="sub" style={{ marginTop: 10, fontSize: 13 }}>
-              Уведомления на телефон появятся в следующей версии. Пока напоминания видны в приложении.
+              Нажмите значок календаря, откройте скачанный файл и подтвердите добавление. Дальше телефон будет напоминать сам, даже когда приложение закрыто. Если потом изменить напоминание здесь, в календаре его нужно обновить отдельно.
             </p>
           </section>
         </>

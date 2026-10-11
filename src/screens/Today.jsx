@@ -6,6 +6,7 @@ import { CheckRow, Progress, DelBtn, EditToggle, Icon, useUi } from '../ui.jsx';
 import { OpSheet, monthTotals } from '../components/OpSheet.jsx';
 import { CycleSheet } from './Health.jsx';
 import { MOODS, GIFT_TEXT } from '../data.js';
+import { dueToday } from '../reminders.js';
 import { cycleDay, phaseOf, PHASE } from '../cycle.js';
 import { today, addDays, diffDays, fmt, greeting, weekdayDate, WD, nextBirthday, inDays, longDate, uid } from '../util.js';
 
@@ -47,6 +48,13 @@ export default function Today() {
     lines.push(ph ? PHASE[ph].name + ': ' + PHASE[ph].hint : 'Отметьте начало месячных в разделе «Здоровье», и появится прогноз.');
   }
   if (M.meno && (S.meno.hot[t] || 0) > 0) lines.push('Приливов сегодня: ' + S.meno.hot[t] + '.');
+  if (M.health) {
+    S.reminders
+      .filter((r) => dueToday(r, t))
+      .sort((a, b) => (a.time < b.time ? -1 : 1))
+      .slice(0, 3)
+      .forEach((r) => lines.push('Сегодня в ' + r.time + ': ' + r.t.toLowerCase() + '.'));
+  }
   if (M.habits && S.habits.length) lines.push(left ? `Осталось дел: ${left} из ${S.habits.length}.` : 'Все дела на сегодня сделаны.');
   if (M.beauty) {
     const due = S.care.filter((c) => c.last && diffDays(c.last, t) >= c.every).map((c) => c.t);
